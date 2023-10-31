@@ -15,7 +15,7 @@ def make_parser():
                         type=str, default=f'{os.environ["root_dir"]}/{os.environ["USER"]}/datasets')
 
     parser.add_argument("--profs",
-                        help="whether provide existing profiling infos (e.g. t_cpu (ms), t_dma, t_gpu, t_model, total_batches)",
+                        help="existing profiling infos (t_cpu (in ms), t_dma, t_gpu, t_model, total_batches), leave blank to re-profile",
                         type=str, default='23.95,10.12,25.4,4.54,1179')
 
     parser.add_argument("--num_workers",
@@ -36,11 +36,11 @@ def make_parser():
 
     parser.add_argument("--trials",
                         help="Number of trials to run profiling",
-                        type=int, default=5)
+                        type=int, default=1)
 
     parser.add_argument("--epochs",
                         help="Number of epochs to run training",
-                        type=int, default=3)
+                        type=int, default=5)
 
     parser.add_argument("--train_batch_size",
                         help="Size of training batches",

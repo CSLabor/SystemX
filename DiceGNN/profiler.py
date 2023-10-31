@@ -22,7 +22,7 @@ def measure_gpu_batching_time(num_trials, gpu_loader):
     """
     return average gpu batching time in ms
     """
-    device = torch.device(f'cuda:{gpu_id}')
+    device = torch.device(f'cuda:0')
     mlog(f"\n=======")
     avgs = []
     for r in range(num_trials):
@@ -45,7 +45,7 @@ def measure_gpu_batching_time(num_trials, gpu_loader):
             end_events[i].record()
         torch.cuda.synchronize()
         elapsed_times = [s.elapsed_time(e) for s, e in zip(start_events, end_events)]
-        mlog(elapsed_times[:5])
+        #mlog(elapsed_times[:5])
         mlog(f"{np.mean(elapsed_times):.2f} ± {np.std(elapsed_times):.2f} ms/batch")
         avgs.append(np.mean(elapsed_times))
     return np.mean(avgs[1:]) if len(avgs) > 1 else avgs[0]
@@ -77,7 +77,7 @@ def measure_cpu_batching_time(num_trials, cpu_loader):
             except StopIteration:
                 break
         if r:
-            mlog(durs[:5])
+            #mlog(durs[:5])
             mlog(f"{np.mean(durs):.2f} ± {np.std(durs):.2f} ms/batch")
             avgs.append(np.mean(durs))
         else:
@@ -88,7 +88,7 @@ def measure_dma_transfering_time(cpu_loader):
     """
     return DMA transferring time in ms
     """
-    device = torch.device(f'cuda:{gpu_id}')
+    device = torch.device(f'cuda:0')
     mlog(f"\n=======")
     mlog("measuring DMA transferring time")
     num_batches = 50
@@ -113,7 +113,7 @@ def measure_dma_transfering_time(cpu_loader):
         end_events[i].record()
     torch.cuda.synchronize()
     elapsed_times = [s.elapsed_time(e) for s, e in zip(start_events, end_events)]
-    mlog(elapsed_times[:5])
+    #mlog(elapsed_times[:5])
     mlog(f"{np.mean(elapsed_times):.2f} ± {np.std(elapsed_times):.2f} ms/batch")
     return np.mean(elapsed_times)
 
@@ -121,7 +121,7 @@ def measure_model_training_time(num_trials, gpu_loader, model, loss_fn, optimize
     """
     return model training time in ms
     """
-    device = torch.device(f'cuda:{gpu_id}')
+    device = torch.device(f'cuda:0')
     mlog(f"\n=======")
     avgs = []
     for r in range(num_trials):
@@ -149,7 +149,7 @@ def measure_model_training_time(num_trials, gpu_loader, model, loss_fn, optimize
             end_events[i].record()
         torch.cuda.synchronize()
         elapsed_times = [s.elapsed_time(e) for s, e in zip(start_events, end_events)]
-        mlog(elapsed_times[:5])
+        #mlog(elapsed_times[:5])
         elapsed_times = elapsed_times[1:]
         mlog(f"{np.mean(elapsed_times):.2f} ± {np.std(elapsed_times):.2f} ms/batch")
         avgs.append(np.mean(elapsed_times))

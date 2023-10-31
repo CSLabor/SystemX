@@ -32,7 +32,7 @@ def Profiler(num_trials, input_dict):
     cpu_train_idx =  gpu_train_idx = train_idx
 
     avg_gpu_batching_time = measure_gpu_batching_time(num_trials, gpu_loader)
-    avg_model_time = measure_model_training_time(num_trials, gpu_loader, model, loss_fn, optimizer)
+    avg_model_time = measure_model_training_time(num_trials, gpu_loader, model, loss_fcn, optimizer)
     avg_cpu_batching_time = measure_cpu_batching_time(num_trials, cpu_loader)
     avg_dma_time = measure_dma_transfering_time(cpu_loader)
     total_num_batches = math.ceil(train_idx.shape[0] / gpu_loader.bs)
@@ -65,8 +65,8 @@ def Scheduler(oldplan, gpu_buffer_size):
     """
     return:
     * feedback: 1 for too much cpu workload and 0 for too much gpu workload
-    * sched_plan: (sched_type, cpu_buffer_size, gpu_buffer_size) or (total_cpu, total_gpu)
-        * sched type: naive_pipe, prefetch, ada_pipe
+    * sched_plan: (sched_type, cpu_buffer_size, gpu_buffer_size)
+        * sched type: naive_pipe, ada_pipe
     * converge: True or False
     """
     if oldplan is None:
@@ -79,7 +79,8 @@ def Scheduler(oldplan, gpu_buffer_size):
 
     if t_model > t_dma:
         optim_n_cpu = int(n_total * (t_gpu + t_model) / (t_gpu + t_cpu))
-        return None, ("prefetch", optim_n_cpu, n_total-optim_n_cpu), True
+        dma_buffer_size = round(gpu_buffer_size*(optim_n_cpu)/(n_total-optim_n_cpu))
+        return None, ("ada_pipe", dma_buffer_size, gpu_buffer_size), True
 
     old_cpu, old_gpu = oldplan
     cur_dma_buffer_size = round(gpu_buffer_size*old_cpu/old_gpu)
@@ -100,9 +101,6 @@ def Executor(input_dict, sched_plan):
         cpu_loader.idx = train_idx
         trainer = DiceScheduledTrainer(device, iter(cpu_loader), iter(DiceGNN.iterators.Blank_iter()), 
                 model, optimizer, loss_fcn, gpu_buffer_size, cpu_buffer_size)
-    elif pipe_type == "prefetch":
-        # corner cases for t_model > t_dma
-        pass
     else:
         # adaptive buffers overlapping
         assert pipe_type == "ada_pipe"
